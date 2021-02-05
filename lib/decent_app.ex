@@ -4,30 +4,10 @@ defmodule DecentApp do
   def call(%Balance{} = balance, commands) do
     {balance, result, error} =
       Enum.reduce(commands, {balance, [], false}, fn command, {bal, res, error} ->
-        if error do
+        if error or operation_not_valid?(command, res) do
           {nil, nil, true}
         else
-          if operation_not_valid?(command, res) do
-            {nil, nil, true}
-          else
-            new_balance = %{bal | coins: bal.coins - 1}
-
-            new_balance =
-              if command == "COINS" do
-                %{new_balance | coins: new_balance.coins + 6}
-              else
-                new_balance
-              end
-
-            new_balance =
-              if command == "+" do
-                %{new_balance | coins: new_balance.coins - 1}
-              else
-                new_balance
-              end
-
-            {new_balance, result(command, res), false}
-          end
+          {new_balance(bal, command), result(command, res), false}
         end
       end)
 
@@ -71,4 +51,8 @@ defmodule DecentApp do
   end
 
   defp result(command, res), do: res ++ [command]
+
+  defp new_balance(bal, "+"), do: %{bal | coins: bal.coins - 2}
+  defp new_balance(bal, "COINS"), do: %{bal | coins: bal.coins + 5}
+  defp new_balance(bal, _command), do: %{bal | coins: bal.coins - 1}
 end
