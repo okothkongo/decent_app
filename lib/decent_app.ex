@@ -7,37 +7,7 @@ defmodule DecentApp do
         if error do
           {nil, nil, true}
         else
-          is_error =
-            cond do
-
-              length(res) < 1 ->
-                if command == "DUP" || command == "POP" || command == "+" || command == "-" do
-                  true
-                else
-                  false
-                end
-              length(res) < 2 ->
-                if command == "+" || command == "-" do
-                  true
-                else
-                  false
-                end
-
-              is_integer(command) ->
-                if command < 0 || command > 10 do
-                  true
-                else
-                  false
-                end
-
-              command != "NOTHING" && command != "DUP" && command != "POP" && command != "+" &&
-                command != "-" && command != "COINS" && !is_integer(command) ->
-                true
-
-              true ->
-                false
-            end
-          if is_error do
+          if operation_not_valid?(command, res) do
             {nil, nil, true}
           else
             new_balance = %{bal | coins: bal.coins - 1}
@@ -105,4 +75,18 @@ defmodule DecentApp do
       end
     end
   end
+
+  defp operation_not_valid?(command, res) when length(res) < 2 and command in ["+", "-"], do: true
+
+  defp operation_not_valid?(command, res)
+       when length(res) < 1 and command in ["DUP", "POP"],
+       do: true
+
+  defp operation_not_valid?(command, _res)
+       when command in ["DUP", "POP", "+", "-", "COINS", "NOTHING"],
+       do: false
+
+  defp operation_not_valid?(command, _res) when is_integer(command) and command in 0..9, do: false
+
+  defp operation_not_valid?(_command, _res), do: true
 end
