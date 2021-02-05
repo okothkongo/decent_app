@@ -12,40 +12,6 @@ defmodule DecentApp do
           else
             new_balance = %{bal | coins: bal.coins - 1}
 
-            res =
-              cond do
-                command === "NOTHING" ->
-                  res
-
-                true ->
-                  cond do
-                    command == "DUP" ->
-                      res ++ [List.last(res)]
-
-                    true ->
-                      if command == "POP" do
-                        {_, res} = List.pop_at(res, length(res) - 1)
-                        res
-                      else
-                        cond do
-                          command == "+" ->
-                            [first, second | rest] = Enum.reverse(res)
-                            Enum.reverse(rest) ++ [first + second]
-
-                          command == "-" ->
-                            [first, second | rest] = Enum.reverse(res)
-                            Enum.reverse(rest) ++ [first - second]
-
-                          is_integer(command) ->
-                            res ++ [command]
-
-                          command == "COINS" ->
-                            res
-                        end
-                      end
-                  end
-              end
-
             new_balance =
               if command == "COINS" do
                 %{new_balance | coins: new_balance.coins + 6}
@@ -60,7 +26,7 @@ defmodule DecentApp do
                 new_balance
               end
 
-            {new_balance, res, false}
+            {new_balance, result(command, res), false}
           end
         end
       end)
@@ -89,4 +55,20 @@ defmodule DecentApp do
   defp operation_not_valid?(command, _res) when is_integer(command) and command in 0..9, do: false
 
   defp operation_not_valid?(_command, _res), do: true
+
+  defp result(command, res) when command in ["NOTHING", "COINS"], do: res
+
+  defp result(command, res) when command in ["+", "-"] do
+    [first, second | rest] = Enum.reverse(res)
+    Enum.reverse(rest) ++ [first - second]
+  end
+
+  defp result("DUP", res), do: res ++ [List.last(res)]
+
+  defp result("POP", res) do
+    {_, res} = List.pop_at(res, length(res) - 1)
+    res
+  end
+
+  defp result(command, res), do: res ++ [command]
 end
